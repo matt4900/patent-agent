@@ -1,4 +1,4 @@
-This repo takes raw data from the USPTO and to fine tune MiMo-V2.6-Distill-Qwen-9B using uses the title, abstract, description, and thinking that is generated to form the referenced description. Patents are long documents usually consisting of 5-10 pages describing the invention, meaning that generating or training on just one patent can take a lot of time. I limited the patents used by the amount of characters to not include very long ones.
+This repo takes raw data from the USPTO to fine tune MiMo-V2.6-Distill-Qwen-9B using the title, abstract, description, and thinking that is generated to form the referenced description. Patents are long documents usually consisting of 5-10 pages describing the invention, meaning that generating or training on just one patent can take a lot of time. I limited the patents used by the amount of characters to not include very long ones.
 
 You will need to create an account and download the raw data file from the USPTO at https://data.uspto.gov/bulkdata/datasets/appxml?fileDataFromDate=2025-10-9&fileDataToDate=2026-10-09 to use this.
 
