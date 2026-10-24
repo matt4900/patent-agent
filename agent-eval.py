@@ -1,9 +1,10 @@
 from langchain.tools import tool
-from typing import Literal
+from typing import Literal, List
 from pydantic import BaseModel, Field
 from langchain.chat_models import init_chat_model
 from langgraph.graph import MessagesState, END, START, StateGraph
 from langgraph.prebuilt import ToolNode
+from langgraph.checkpoint.memory import InMemorySaver
 from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, VectorParams
 from qdrant_client.models import PointStruct
@@ -11,24 +12,53 @@ import sys
 from sentence_transformers import SentenceTransformer
 import json
 import pprint
+import random
+
 from langchain_huggingface.llms import HuggingFacePipeline
 from langchain_core.prompts import PromptTemplate
 from langchain_huggingface import ChatHuggingFace
 from langchain_openai import ChatOpenAI
 from langchain.messages import HumanMessage
+from langchain_core.messages import AIMessage, ToolMessage, BaseMessage
+
+from deepeval import assert_test
+from deepeval.test_case import LLMTestCase, SingleTurnParams
+from deepeval.metrics import GEval
+
+from deepeval import evaluate
+from deepeval.tracing import observe, update_current_trace, update_current_span
+from deepeval.test_case import Turn, ToolCall
+from deepeval.dataset import ConversationalGolden
+from deepeval.models import LocalModel
+from deepeval.dataset import EvaluationDataset
+from deepeval.simulator import ConversationSimulator
+from deepeval.metrics import (
+    TurnRelevancyMetric,
+    TurnFaithfulnessMetric,
+    KnowledgeRetentionMetric,
+    ConversationCompletenessMetric
+)
+from deepeval.evaluate.configs import AsyncConfig
+from deepeval.evaluate import DisplayConfig
 
 COLLECTION_NAME = "patent-abstracts"
-BATCH_SIZE = 128
 
-client = QdrantClient(url="http://172.17.0.2:6333")
+model_name = "XiaomiMiMo/MiMo-V2.6-Distill-Qwen-9B"
+
+JUDGE_MODEL = model_name
+JUDGE_BASE_URL = "http://172.17.0.4:1090/v1"
+JUDGE_API_KEY = "none"
+GOLDENS_PATH = "patent_goldens.json"
+
+client = QdrantClient(url="http://172.17.0.3:6333")
 
 model = SentenceTransformer("Qwen/Qwen3-Embedding-0.6B")
 
-model_name = "XiaomiMiMo/MiMo-V2.6-Distill-Qwen-9B"
 
 pp = pprint.PrettyPrinter(indent=4, sort_dicts=False, width=100)
 
 @tool
+@observe(type="retriever")
 def retrieve_patents(query: str) -> str:
     """Search and return information from vector DB of patents."""
 
@@ -44,7 +74,10 @@ def retrieve_patents(query: str) -> str:
     retrieved_docs = [ point.payload["info"] for point in search_result ]
 
     #print(retrieved_docs)
-    return "\n\n".join([doc for doc in retrieved_docs])
+
+    returned_docs = "\n\n".join([doc for doc in retrieved_docs])
+    update_current_span(input=query, retrieval_context=returned_docs)
+    return returned_docs
 
 retriever_tool = retrieve_patents
 
@@ -64,11 +97,12 @@ hf = HuggingFacePipeline.from_model_id(
 #chat_model = ChatHuggingFace(llm=hf)
 
 chat_model = ChatOpenAI(
-    base_url="http://172.17.0.4:1090/v1",
+    base_url=JUDGE_BASE_URL,
     api_key="not-needed",
     model=model_name,
 )
 
+@observe()
 def generate_query_or_respond(state: MessagesState):
     """Call the model to generate a response based on the current state. Given
     the question, it will decide to retrieve using the retriever tool, or simply respond to the user.
@@ -127,7 +161,7 @@ GENERATE_PROMPT = (
     "<context>\n{context}\n</context>"
 )
 
-
+@observe()
 def generate_answer(state: MessagesState):
     """Generate an answer from question and retrieved context."""
     question = state["messages"][0].content
@@ -146,9 +180,10 @@ REWRITE_PROMPT = (
     "Formulate an improved question:"
 )
 
+@observe()
 def rewrite_question(state: MessagesState):
     """Rewrite the original user question."""
-    print("re-writing question")
+    #print("re-writing question")
     question = state["messages"][0].content
     prompt = REWRITE_PROMPT.format(question=question)
     response = chat_model.invoke([{"role": "user", "content": prompt}])
@@ -193,11 +228,23 @@ workflow.add_conditional_edges(
 workflow.add_edge("generate_answer", END)
 workflow.add_edge("rewrite_question", "generate_query_or_respond")
 
-graph = workflow.compile()
+graph = workflow.compile(checkpointer=InMemorySaver())
 
+def model_callback(input: str) -> Turn:
+    return run_agentic_rag(input, True)
 
-def run_agentic_rag() -> None:
-    input_msg = input("What would you like to do? You can search for patents or generate a patent.\n")
+def run_agentic_rag(user_message: str = "", eval_mode = False) -> Turn:
+
+    if user_message == "":
+        input_msg = input("What would you like to do? You can search for patents or generate a patent.\n")
+    else:
+        input_msg = user_message
+
+    thread_id = "user-" + str(random.randint(1, 10000))
+
+    config = {"configurable": {"thread_id": thread_id }}
+
+    new_msgs: List[BaseMessage] = []
 
     for chunk in graph.stream(
         {
@@ -208,15 +255,72 @@ def run_agentic_rag() -> None:
                 }
             ]
         },
+        config,
         stream_mode="values",
     ):
         last_message = chunk["messages"][-1]
         pretty_print = getattr(last_message, "pretty_print", None)
-        if callable(pretty_print):
+        if not eval_mode and callable(pretty_print):
             pretty_print()
 
-print("AI Patent Agent\n\n")
-run_agentic_rag()
+        new_msgs.append(last_message)
+
+    answers = [
+        m for m in new_msgs
+        if isinstance(m, AIMessage) and not getattr(m, "tool_calls", None) and m.content
+    ]
+
+    if answers:
+        answer = answers[-1].content
+    else:
+        answer = ""
+
+    tool_msgs = [m.content for m in new_msgs
+                 if isinstance(m, ToolMessage) and m.name == "retrieve_patents"]
+    tools_called = [
+        ToolCall(name=tc["name"], input_parameters=tc["args"])
+        for m in new_msgs if isinstance(m, AIMessage)
+        for tc in (m.tool_calls or [])
+    ]
+
+    update_current_trace(
+        name="patent_agent_turn",
+        thread_id=thread_id,
+        input=user_message,
+        output=answer,
+        tools_called=tools_called or None,
+    )
+    return Turn(
+        role="assistant",
+        content=answer,
+        tools_called=tools_called or None,
+    )
+
+
+if len(sys.argv) > 1 and sys.argv[1] == "eval":
+    dataset = EvaluationDataset()
+    dataset.add_goldens_from_json_file(file_path=GOLDENS_PATH)
+    print(f"Loaded {len(dataset.goldens)} conversational goldens from {GOLDENS_PATH}")
+
+    judge = LocalModel(model=JUDGE_MODEL, base_url=JUDGE_BASE_URL, api_key=JUDGE_API_KEY)
+
+    simulator = ConversationSimulator(model_callback=model_callback, simulator_model=judge)
+    test_cases = simulator.simulate(conversational_goldens=dataset.goldens, max_user_simulations=1)
+
+    evaluate(
+        test_cases=test_cases,
+        metrics=[
+            TurnRelevancyMetric(threshold=0.7, model=judge, include_reason=False),
+            TurnFaithfulnessMetric(threshold=0.7, model=judge, include_reason=False),
+            KnowledgeRetentionMetric(threshold=0.7, model=judge, include_reason=False),
+            ConversationCompletenessMetric(threshold=0.7, model=judge, include_reason=False),
+        ],
+        async_config=AsyncConfig(run_async=False, max_concurrent=1),
+        display_config=DisplayConfig(results_folder="./evals")
+    )
+else:
+    run_agentic_rag()
+
 
 client.close()
 

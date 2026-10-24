@@ -1,0 +1,27 @@
+[
+  {
+    "scenario": "An independent inventor is designing a regenerative braking system for e-bikes and wants to know whether similar patents already exist before filing.",
+    "expected_outcome": "The assistant searches the patent database, summarizes the most relevant patents it finds (or clearly says none match), and answers follow-up questions about them without inventing details.",
+    "user_description": "Maya, a mechanical engineer and first-time inventor, not familiar with patent jargon."
+  },
+  {
+    "scenario": "An inventor is designing an egg cooking machine and wants to know whether similar patents already exist before filing.",
+    "expected_outcome": "The assistant searches the patent database, summarizes the most relevant patents it finds (or clearly says none match), and answers follow-up questions about them without inventing details.",
+    "user_description": "a first-time inventor, not familiar with patent jargon."
+  },
+  {
+    "scenario": "An inventor is designing a drip tray for grills and wants to know whether similar patents already exist before filing.",
+    "expected_outcome": "The assistant searches the patent database, summarizes the most relevant patents it finds (or clearly says none match), and answers follow-up questions about them without inventing details.",
+    "user_description": "a first-time inventor, not familiar with patent jargon."
+  },
+  {
+    "scenario": "An inventor is designing a towel heating device and wants to know whether similar patents already exist before filing.",
+    "expected_outcome": "The assistant searches the patent database, summarizes the most relevant patents it finds (or clearly says none match), and answers follow-up questions about them without inventing details.",
+    "user_description": "a first-time inventor, not familiar with patent jargon."
+  },
+  {
+    "scenario": "An inventor is designing a cleaning robot and wants to know whether similar patents already exist before filing.",
+    "expected_outcome": "The assistant searches the patent database, summarizes the most relevant patents it finds (or clearly says none match), and answers follow-up questions about them without inventing details.",
+    "user_description": "a first-time inventor, not familiar with patent jargon."
+  }
+]

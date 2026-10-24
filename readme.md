@@ -10,15 +10,118 @@ Structure of repo and usage in order:
 - peft-mimo-inference-description.py - runs inference on the held out dataset. You can also edit the size of the test set. 
 - langfuse-mimo-evaluate-desc.py - evaluate the base model and fine tuned model against the ground truth in the test set
 - create-vector-db.php - creates a vector DB using Qdrant with Qwen3-Embedding-0.6B embeddings to allow for searching patents based on titles and abstracts
+- agent-eval.py - the script to run the agent or run an agent eval with DeepEval
 
 You will need to make these changes before running:
 
 - replace http://172.17.0.3:1090/v1/chat/completions and http://172.17.0.4:1090/v1 to set the correct URL for your Llama.cpp server running MiMo-V2.6-Distill-Qwen-9B in langfuse-mimo-evaluate-desc.py and agent.py
-- change the URL to your Qdrant server address in create-vector-db.php and agent.py
+- change the URL to your Qdrant server address in create-vector-db.php and agent-eval.py
 
-Example Usage
+Example Agent DeepEval Usage:
 
-```python
+```
+python agent-eval.py eval
+
+Loading weights: 100%|██████████████████████████████████████████████████████████████| 310/310 [00:02<00:00, 151.55it/s]
+Loaded 5 conversational goldens from patent_goldens.json
+🪄 Simulating 5 conversational test case(s) ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━   0% 0:00:12
+        ⚡ Test case #0                     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━   0% 0:00:12
+🪄 Simulating 5 conversational test case(s) ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━   0% 0:00:16
+        ⚡ Test case #0                     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━   0% 0:00:16
+🪄 Simulating 5 conversational test case(s) ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━   0% 0:00:16
+        ⚡ Test case #0                     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━   0% 0:00:16
+        ⚡ Test case #1                     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━   0% 0:00:16
+🪄 Simulating 5 conversational test case(s) ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━   0% 0:00:21
+        ⚡ Test case #0                     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━   0% 0:00:21
+🪄 Simulating 5 conversational test case(s) ━━━━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  20% 0:00:24
+        ⚡ Test case #0                     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━   0% 0:00:24
+🪄 Simulating 5 conversational test case(s) ━━━━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  20% 0:00:24
+        ⚡ Test case #0                     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━   0% 0:00:24
+        ⚡ Test case #1                     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━   0% 0:00:24
+🪄 Simulating 5 conversational test case(s) ━━━━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  20% 0:00:29
+        ⚡ Test case #0                     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━   0% 0:00:29
+🪄 Simulating 5 conversational test case(s) ━━━━━━━━━━━━━━━━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  40% 0:00:31
+        ⚡ Test case #0                     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━   0% 0:00:31
+🪄 Simulating 5 conversational test case(s) ━━━━━━━━━━━━━━━━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  40% 0:00:31
+        ⚡ Test case #0                     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━   0% 0:00:31
+        ⚡ Test case #1                     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━   0% 0:00:31
+re-writing question
+🪄 Simulating 5 conversational test case(s) ━━━━━━━━━━━━━━━━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  40% 0:00:35
+        ⚡ Test case #0                     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━   0% 0:00:35
+🪄 Simulating 5 conversational test case(s) ━━━━━━━━━━━━━━━━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  40% 0:00:58
+        ⚡ Test case #0                     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━   0% 0:00:58
+🪄 Simulating 5 conversational test case(s) ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━  60% 0:01:07
+        ⚡ Test case #0                     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  50% 0:01:07
+🪄 Simulating 5 conversational test case(s) ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━  60% 0:01:08
+        ⚡ Test case #0                     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  50% 0:01:08
+        ⚡ Test case #1                     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━   0% 0:01:08[Confident AI Trace Log]  No Confident AI API key found. Skipping trace posting.
+🪄 Simulating 5 conversational test case(s) ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━  60% 0:01:17
+        ⚡ Test case #0                     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  50% 0:01:17
+🪄 Simulating 5 conversational test case(s) ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╺━━━━━━━━━━━  80% 0:01:18
+        ⚡ Test case #1                     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  50% 0:01:18[Co🪄 Simulating 5 conversational test case(s) ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╺━━━━━━━━━━━  80% 0:01:19
+        ⚡ Test case #1                     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  50% 0:01:19[Co🪄 Simulating 5 conversational test case(s) ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╺━━━━━━━━━━━  80% 0:01:23
+        ⚡ Test case #1                     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  50% 0:01:23[Co✨ You're running DeepEval's latest Turn Relevancy Metric! (using XiaomiMiMo/MiMo-V2.6-Distill-Qwen-9B (Local Model),
+strict=False, async_mode=False)...
+✨ You're running DeepEval's latest Turn Faithfulness Metric! (using XiaomiMiMo/MiMo-V2.6-Distill-Qwen-9B (Local Model),
+strict=False, async_mode=False)...
+✨ You're running DeepEval's latest Knowledge Retention Metric! (using XiaomiMiMo/MiMo-V2.6-Distill-Qwen-9B (Local
+Model), strict=False, async_mode=False)...
+✨ You're running DeepEval's latest Conversation Completeness Metric! (using XiaomiMiMo/MiMo-V2.6-Distill-Qwen-9B (Local
+Model), strict=False, async_mode=False)...
+
+╭──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ 🚀 DeepEval Evaluation Results                                                                                       │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ ✅ conversational_test_case_0 (Passed 4 metrics)                                                                     │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ ✅ conversational_test_case_1 (Passed 4 metrics)                                                                     │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ ✅ conversational_test_case_2 (Passed 4 metrics)                                                                     │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ ✅ conversational_test_case_3 (Passed 4 metrics)                                                                     │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ ✅ conversational_test_case_4 (Passed 4 metrics)                                                                     │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ Aggregate Metrics                                                                                                    │
+│                                                                                                                      │
+│  Metric                                ┃ Average Score       ┃ Pass Rate                                  ┃ Total    │
+│ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━ │
+│  Turn Relevancy                        │ 1.00                │ 100.00% | passed=5 | failed=0              │ 5        │
+│  Turn Faithfulness                     │ 1.00                │ 100.00% | passed=5 | failed=0              │ 5        │
+│  Knowledge Retention                   │ 1.00                │ 100.00% | passed=5 | failed=0              │ 5        │
+│  Conversation Completeness             │ 1.00                │ 100.00% | passed=5 | failed=0              │ 5        │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+
+
+⚠ WARNING: No hyperparameters logged.
+» Log hyperparameters to attribute prompts and models to your test runs.
+
+================================================================================
+Test run saved at evals/test_run_20261023_190819.json
+
+
+✓ Evaluation completed 🎉! (time taken: 170.14s | token cost: None)
+» Test Results (5 total tests):
+   » Pass Rate: 100.0% | Passed: 5 | Failed: 0
+
+ ================================================================================
+
+» Want to share evals with your team, or a place for your test cases to live? ❤️ 🏡
+  » Run 'deepeval view' to analyze and save testing results on Confident AI.
+```
+
+
+Example Agent Usage:
+
+```
+python agent-eval.py
+
 AI Patent Agent
 
 
